@@ -12,6 +12,7 @@ app.set("view engine", "ejs");
 // middleware
 app.use(morgan("dev"));
 app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true }));
 
 // connect to mongodb
 const dbURI =
@@ -63,11 +64,49 @@ app.get("/single-blog", (req, res) => {
 
 // Routes
 app.get("/", (req, res) => {
-  res.render("index", { title: "Home" });
+  res.redirect("/blogs");
 });
 
 app.get("/about", (req, res) => {
   res.render("about", { title: "About" });
+});
+
+app.get("/blogs", (req, res) => {
+  Blog.find()
+    .then((result) => {
+      res.render("index", { title: "Home", blogs: result });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+app.post("/blogs", (req, res) => {
+  const blog = new Blog({
+    title: req.body.title,
+    snippet: req.body.snippet,
+    body: req.body.body,
+  });
+
+  blog
+    .save()
+    .then((result) => {
+      res.redirect("/blogs");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+app.get("/blogs/:id", (req, res) => {
+  const id = req.params.id;
+  Blog.findById(id)
+    .then((result) => {
+      res.render("blog", { title: "Blog", blog: result });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 app.get("/blogs/create", (req, res) => {
